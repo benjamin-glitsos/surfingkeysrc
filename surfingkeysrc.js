@@ -1,26 +1,33 @@
 // Utilities ----------
 
-const regexToString = r => r.toString().slice(1, -1);
+const comment = "## ";
+
+const separator = " ";
+
+const lines = s => s.split("\n");
+
+const parseFormat = s =>
+    lines(s)
+        .map(s => s.trim())
+        .filter(s => !s.startsWith(comment))
+        .filter(s => s.length > 0);
+
+const escapeRegex = s => s.replace(/\//g, "\\$&");
 
 const joinRegex = ls => new RegExp(ls.join("|"), "i");
 
-const blacklist = ls => {
-    settings.blacklistPattern = joinRegex(ls.map(regexToString));
+const blacklist = b => {
+    settings.blacklistPattern = joinRegex(
+        parseFormat(b).map(s => escapeRegex(s))
+    );
 };
 
 const keys = ks => {
     const parse = x => {
-        const comment = "## ";
-        const separator = " ";
         if (Array.isArray(x)) {
             return [x];
         } else if (typeof x === "string") {
-            return x
-                .split("\n")
-                .map(s => s.trim())
-                .filter(s => !s.startsWith(comment))
-                .filter(s => s.length > 0)
-                .map(s => s.split(separator));
+            return parseFormat(x).map(s => s.split(separator));
         } else {
             return null;
         }
@@ -59,16 +66,19 @@ Hints.characters = "fjkl;asdghqwertyuiopzxcvbnm";
 
 // Blacklist
 
-blacklist([
-    /.*mail.google.com.*/,
-    /.*inbox.google.com.*/,
-    /.*docs.google.com.*/,
-    /.*lastpass.com.*/,
-    /.*youtube.com.*/,
-    /.*google.com.au\/maps.*/,
-    /.*facebook.com.*/,
-    /.*mega.nz.*/
-]);
+blacklist(`
+## Domain
+.*mail.google.com.*
+.*inbox.google.com.*
+.*docs.google.com.*
+.*youtube.com.*
+.*lastpass.com.*
+.*facebook.com.*
+.*mega.nz.*
+
+## Other
+.*google.com.au/maps.*
+`);
 
 // Mappings ----------
 
