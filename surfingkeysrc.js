@@ -1,3 +1,11 @@
+// Configuration --------------------
+
+const VIDEO_SKIP_SECONDS = 5;
+
+// Constants --------------------
+
+const YOUTUBE_DOMAIN = /.*youtube.com.*/i;
+
 // Utilities ----------
 
 const comment = "## ";
@@ -67,17 +75,36 @@ Hints.characters = "fjkl;asdghqwertyuiopzxcvbnm";
 // Blacklist
 
 blacklist(`
-## Domain
+
+## General
+
 .*mail.google.com.*
 .*inbox.google.com.*
 .*docs.google.com.*
-.*youtube.com.*
 .*lastpass.com.*
 .*facebook.com.*
+# .*youtube.com.*
 .*mega.nz.*
-
-## Other
 .*google.com.au/maps.*
+.*calendar.google.com.*
+.*ticktick.com/webapp.*
+
+## Work
+
+.*app.resourceguruapp.com.*
+.*atlassian.net.*
+.*pi.pardot.com.*
+.*thinkfwd.com.au/system.*
+.*lenovo.prometstaging.com.*
+.*lenovo-preprod.prometstaging.com.*
+.*qboard.lgcom.lge.com.*
+.*app-ab28.marketo.com.*
+.*teams.microsoft.com.*
+
+## Personal Projects
+
+.*app.cloudcraft.co.*
+
 `);
 
 // Mappings ----------
@@ -139,6 +166,7 @@ zU sU
     `
 ## Bookmark page
 af
+
     `,
     mapkey,
     [
@@ -146,6 +174,14 @@ af
         "Go to Home (New Tab Page)",
         () => {
             window.open("http://www.google.com", "_self");
+        }
+    ],
+    mapkey,
+    [
+        "gt",
+        "Go to TickTick",
+        () => {
+            window.open("https://ticktick.com/webapp/#q/all/today", "_self");
         }
     ],
     [
@@ -176,6 +212,7 @@ af
     ],
     aceVimMap,
     `
+
 ## Actual vs display line navigation
 j gj normal
 k gk normal
@@ -192,13 +229,59 @@ v V visual
 ## Jump To Start/End Of Line
 H 0 normal
 H 0 visual
-
 L $ normal
 L $ visual
 
 ## 'Entire' Textobj
-ae ggoG$ visual
-    `
+## ae ggoG$ visual
+
+## Go to last used tab
+<Ctrl-6> go
+
+## Youtube-specific mappings
+    `,
+    mapkey,
+    [
+        "<Space>",
+        "Play/Pause Video",
+        () => {
+            const video = document.getElementsByTagName("video")[0];
+            video.paused ? video.play() : video.pause()
+        },
+        { domain: YOUTUBE_DOMAIN }
+    ],
+    [
+        "h",
+        `Rewind ${VIDEO_SKIP_SECONDS} seconds`,
+        () => {
+            document.getElementsByTagName("video")[0].currentTime -= VIDEO_SKIP_SECONDS
+        },
+        { domain: YOUTUBE_DOMAIN }
+    ],
+    [
+        "l",
+        `Skip ${VIDEO_SKIP_SECONDS} seconds`,
+        () => {
+            document.getElementsByTagName("video")[0].currentTime += VIDEO_SKIP_SECONDS
+        },
+        { domain: YOUTUBE_DOMAIN }
+    ],
+    [
+        "f",
+        "Toggle Fullscreen",
+        () => {
+            document.querySelector(".ytp-button.ytp-fullscreen-button").click()
+        },
+        { domain: YOUTUBE_DOMAIN }
+    ],
+    [
+        "m",
+        "Toggle Mute",
+        () => {
+            document.querySelector(".ytp-button.ytp-mute-button").click()
+        },
+        { domain: YOUTUBE_DOMAIN }
+    ]
 ]);
 
 // Styling ----------
@@ -237,43 +320,33 @@ settings.theme = `
     background: #24272e;
     color: #abb2bf;
 }
-
 .sk_theme tbody {
     color: #fff;
 }
-
 .sk_theme input {
     color: #d0d0d0;
 }
-
 .sk_theme .url {
     color: #61afef;
 }
-
 .sk_theme .annotation {
     color: #56b6c2;
 }
-
 .sk_theme .omnibar_highlight {
     color: #528bff;
 }
-
 .sk_theme .omnibar_timestamp {
     color: #e5c07b;
 }
-
 .sk_theme .omnibar_visitcount {
     color: #98c379;
 }
-
 .sk_theme #sk_omnibarSearchResult>ul>li:nth-child(odd) {
     background: #303030;
 }
-
 .sk_theme #sk_omnibarSearchResult>ul>li.focused {
     background: #3e4452;
 }
-
 #sk_status, #sk_find {
     font-size: 20pt;
 }
