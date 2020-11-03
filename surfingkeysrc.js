@@ -1,67 +1,6 @@
-// Configuration --------------------
-
-const VIDEO_SKIP_SECONDS = 5;
-
 // Constants --------------------
 
-const YOUTUBE_DOMAIN = /.*youtube.com.*/i;
-
-// Utilities ----------
-
-const comment = "## ";
-
-const separator = " ";
-
-const lines = s => s.split("\n");
-
-const parseFormat = s =>
-    lines(s)
-        .map(s => s.trim())
-        .filter(s => !s.startsWith(comment))
-        .filter(s => s.length > 0);
-
-const escapeRegex = s => s.replace(/\//g, "\\$&");
-
-const joinRegex = ls => new RegExp(ls.join("|"), "i");
-
-const blacklist = b => {
-    settings.blacklistPattern = joinRegex(
-        parseFormat(b).map(s => escapeRegex(s))
-    );
-};
-
-const keys = ks => {
-    const parse = x => {
-        if (Array.isArray(x)) {
-            return [x];
-        } else if (typeof x === "string") {
-            return parseFormat(x).map(s => s.split(separator));
-        } else {
-            return null;
-        }
-    };
-
-    const loop = ({ fun, list }) => {
-        if (list.length > 0) {
-            const head = list[0];
-            const tail = list.slice(1);
-            if (head instanceof Function) {
-                return loop({ fun: head, list: tail });
-            } else if (fun instanceof Function) {
-                parse(head).map(k => fun(...k));
-                return loop({ fun, list: tail });
-            } else if (tail.length !== 0) {
-                return loop({ fun: null, list: tail });
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    };
-
-    loop({ fun: null, list: ks });
-};
+const VIDEO_SKIP_SECONDS = 5;
 
 // Settings ----------
 
@@ -72,7 +11,52 @@ settings.scrollStepSize = 100;
 // Hints
 Hints.characters = "fjkl;asdghqwertyuiopzxcvbnm";
 
-// Blacklist
+// Utilities ----------
+
+const blacklist = b => {
+    const comment = "## ";
+
+    const lines = s => s.split("\n");
+
+    const parseFormat = s =>
+        lines(s)
+            .map(s => s.trim())
+            .filter(s => !s.startsWith(comment))
+            .filter(s => s.length > 0);
+
+    const escapeRegex = s => s.replace(/\//g, "\\$&");
+
+    const joinRegex = ls => new RegExp(ls.join("|"), "i");
+
+    settings.blacklistPattern = joinRegex(
+        parseFormat(b).map(s => escapeRegex(s))
+    );
+};
+
+function mappings(x) {
+    for (const [domainStr, maps] of Object.entries(x)) {
+        const domain = new RegExp(domainStr, "i");
+
+        for (const [function$, ...params] of maps) {
+            switch (function$.name) {
+                case "aceVimMap":
+                    function$(...params);
+                    break;
+                case "mapkey":
+                    function$(...params, { domain });
+                    break;
+                default:
+                    function$(...params, domain);
+            }
+        }
+    }
+}
+
+function openSelf(url) {
+    window.open(url, "_self");
+}
+
+// Blacklist --------------------
 
 blacklist(`
 
@@ -83,7 +67,6 @@ blacklist(`
 .*docs.google.com.*
 .*lastpass.com.*
 .*facebook.com.*
-# .*youtube.com.*
 .*mega.nz.*
 .*google.com.au/maps.*
 .*calendar.google.com.*
@@ -109,180 +92,156 @@ blacklist(`
 
 // Mappings ----------
 
-keys([
-    iunmap,
-    `
-## Emoji completion
-:
-    `,
-    map,
-    `
-## Select Tab
-e T
-
-## Tab Switching
-J E
-K R
-[ E
-] R
-
-## Tab History Switching
-go B
-gw F
-
-## Switch To First/Last Tab
-gH g0
-gL g$
-
-## Re-open closed tab
-p X
-
-## History Navigation
-b S
-W D
-
-## Move Tabs
-H <<
-L >>
-
-## Clicking Links
-m cf
-t gf
-
-## Bookmark page
-a ab
-
-## Page Up/Down
-<Space> d
-<S-Space> u
-
-## Edit url in ace editor and open in a new tab
-zu su
-
-## Edit url in ace editor and open in the current tab
-zU sU
-    `,
-    unmap,
-    `
-## Bookmark page
-af
-
-    `,
-    mapkey,
-    [
-        "sh",
-        "Go to Home (New Tab Page)",
-        () => {
-            window.open("http://www.google.com", "_self");
-        }
+mappings({
+    ".*": [
+        // Emoji Completion
+        [iunmap, ":"],
+        // Select Tab
+        [map, "e", "T"],
+        // Tab Switching
+        [map, "J", "E"],
+        [map, "K", "R"],
+        [map, "[", "E"],
+        [map, "]", "R"],
+        // Tab History Switching
+        [map, "go", "B"],
+        [map, "gw", "F"],
+        // Switch To First/Last Tab
+        [map, "gH", "g0"],
+        [map, "gL", "g$"],
+        // Re-open closed tab
+        [map, "p", "X"],
+        // History Navigation
+        [map, "b", "S"],
+        [map, "W", "D"],
+        // Move Tabs
+        [map, "H", "<<"],
+        [map, "L", ">>"],
+        // Clicking Links
+        [map, "m", "cf"],
+        [map, "t", "gf"],
+        // Bookmark page
+        [map, "a", "ab"],
+        // Page Up/Down
+        [map, "<Space>", "d"],
+        [map, "<S-Space>", "u"],
+        // Edit url in ace editor and open in a new tab
+        [map, "zu", "su"],
+        // Edit url in ace editor and open in the current tab
+        [map, "zU", "sU"],
+        // Bookmark page
+        [unmap, "af"],
+        // Go to certain pages
+        [
+            mapkey,
+            "sh",
+            "Go to Home (New Tab Page)",
+            () => openSelf("http://www.google.com")
+        ],
+        [
+            mapkey,
+            "gt",
+            "Go to TickTick",
+            () => openSelf("https://ticktick.com/webapp/#q/all/today")
+        ],
+        // Reload
+        [
+            mapkey,
+            "gr",
+            "Hard reload (reload without cache)",
+            () => {
+                location.reload(true);
+            }
+        ],
+        // Copy from the URL
+        [
+            mapkey,
+            "ys",
+            "Copy the url slug",
+            () => {
+                Clipboard.write(
+                    location.pathname.split("/").slice(-1).toString()
+                );
+            }
+        ],
+        [
+            mapkey,
+            "yP",
+            "Copy the url path",
+            () => {
+                Clipboard.write(location.pathname.substring(1));
+            }
+        ],
+        // Actual vs display line navigation
+        [aceVimMap, "j", "gj", "normal"],
+        [aceVimMap, "j", "gj", "normal"],
+        [aceVimMap, "k", "gk", "normal"],
+        [aceVimMap, "j", "gj", "visual"],
+        [aceVimMap, "k", "gk", "visual"],
+        [aceVimMap, "J", "j", "normal"],
+        [aceVimMap, "K", "k", "normal"],
+        [aceVimMap, "J", "j", "visual"],
+        [aceVimMap, "K", "k", "visual"],
+        // 'vv' Visual Line Mode
+        [aceVimMap, "v", "V", "visual"],
+        // Jump To Start/End Of Line
+        [aceVimMap, "H", "0", "normal"],
+        [aceVimMap, "H", "0", "visual"],
+        [aceVimMap, "L", "$", "normal"],
+        [aceVimMap, "L", "$", "visual"],
+        // Go to last used tab
+        [aceVimMap, "<Ctrl-6>", "go"]
     ],
-    mapkey,
-    [
-        "gt",
-        "Go to TickTick",
-        () => {
-            window.open("https://ticktick.com/webapp/#q/all/today", "_self");
-        }
-    ],
-    [
-        "gr",
-        "Hard reload (reload without cache)",
-        () => {
-            location.reload(true);
-        }
-    ],
-    [
-        "ys",
-        "Copy the url slug",
-        () => {
-            Clipboard.write(
-                location.pathname
-                    .split("/")
-                    .slice(-1)
-                    .toString()
-            );
-        }
-    ],
-    [
-        "yP",
-        "Copy the url path",
-        () => {
-            Clipboard.write(location.pathname.substring(1));
-        }
-    ],
-    aceVimMap,
-    `
-
-## Actual vs display line navigation
-j gj normal
-k gk normal
-j gj visual
-k gk visual
-J j normal
-K k normal
-J j visual
-K k visual
-
-## 'vv' Visual Line Mode
-v V visual
-
-## Jump To Start/End Of Line
-H 0 normal
-H 0 visual
-L $ normal
-L $ visual
-
-## 'Entire' Textobj
-## ae ggoG$ visual
-
-## Go to last used tab
-<Ctrl-6> go
-
-## Youtube-specific mappings
-    `,
-    mapkey,
-    [
-        "<Space>",
-        "Play/Pause Video",
-        () => {
-            const video = document.getElementsByTagName("video")[0];
-            video.paused ? video.play() : video.pause()
-        },
-        { domain: YOUTUBE_DOMAIN }
-    ],
-    [
-        "h",
-        `Rewind ${VIDEO_SKIP_SECONDS} seconds`,
-        () => {
-            document.getElementsByTagName("video")[0].currentTime -= VIDEO_SKIP_SECONDS
-        },
-        { domain: YOUTUBE_DOMAIN }
-    ],
-    [
-        "l",
-        `Skip ${VIDEO_SKIP_SECONDS} seconds`,
-        () => {
-            document.getElementsByTagName("video")[0].currentTime += VIDEO_SKIP_SECONDS
-        },
-        { domain: YOUTUBE_DOMAIN }
-    ],
-    [
-        "f",
-        "Toggle Fullscreen",
-        () => {
-            document.querySelector(".ytp-button.ytp-fullscreen-button").click()
-        },
-        { domain: YOUTUBE_DOMAIN }
-    ],
-    [
-        "m",
-        "Toggle Mute",
-        () => {
-            document.querySelector(".ytp-button.ytp-mute-button").click()
-        },
-        { domain: YOUTUBE_DOMAIN }
+    ".*youtube.com.*": [
+        [
+            mapkey,
+            "<Space>",
+            "Play/Pause Video",
+            () => {
+                const video = document.getElementsByTagName("video")[0];
+                video.paused ? video.play() : video.pause();
+            }
+        ],
+        [
+            mapkey,
+            "h",
+            `Rewind ${VIDEO_SKIP_SECONDS} seconds`,
+            () => {
+                document.getElementsByTagName(
+                    "video"
+                )[0].currentTime -= VIDEO_SKIP_SECONDS;
+            }
+        ],
+        [
+            mapkey,
+            "l",
+            `Skip ${VIDEO_SKIP_SECONDS} seconds`,
+            () => {
+                document.getElementsByTagName(
+                    "video"
+                )[0].currentTime += VIDEO_SKIP_SECONDS;
+            }
+        ],
+        [
+            mapkey,
+            "f",
+            "Toggle Fullscreen",
+            () => {
+                document
+                    .querySelector(".ytp-button.ytp-fullscreen-button")
+                    .click();
+            }
+        ],
+        [
+            mapkey,
+            "m",
+            "Toggle Mute",
+            () => {
+                document.querySelector(".ytp-button.ytp-mute-button").click();
+            }
+        ]
     ]
-]);
+});
 
 // Styling ----------
 
@@ -320,33 +279,43 @@ settings.theme = `
     background: #24272e;
     color: #abb2bf;
 }
+
 .sk_theme tbody {
     color: #fff;
 }
+
 .sk_theme input {
     color: #d0d0d0;
 }
+
 .sk_theme .url {
     color: #61afef;
 }
+
 .sk_theme .annotation {
     color: #56b6c2;
 }
+
 .sk_theme .omnibar_highlight {
     color: #528bff;
 }
+
 .sk_theme .omnibar_timestamp {
     color: #e5c07b;
 }
+
 .sk_theme .omnibar_visitcount {
     color: #98c379;
 }
+
 .sk_theme #sk_omnibarSearchResult>ul>li:nth-child(odd) {
     background: #303030;
 }
+
 .sk_theme #sk_omnibarSearchResult>ul>li.focused {
     background: #3e4452;
 }
+
 #sk_status, #sk_find {
     font-size: 20pt;
 }
