@@ -71,7 +71,7 @@ blacklist(`
 .*google.com.au/maps.*
 .*calendar.google.com.*
 .*ticktick.com/webapp.*
-.*localhost:8787.*
+.*localhost.*
 
 ## Work
 
