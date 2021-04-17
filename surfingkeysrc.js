@@ -71,6 +71,7 @@ blacklist(`
 .*google.com.au/maps.*
 .*calendar.google.com.*
 .*ticktick.com/webapp.*
+.*localhost:8787.*
 
 ## Work
 
@@ -87,6 +88,7 @@ blacklist(`
 ## Personal Projects
 
 .*app.cloudcraft.co.*
+.*ims.benglitsos.com.au.*
 
 `);
 
